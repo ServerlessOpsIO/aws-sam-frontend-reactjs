@@ -11,6 +11,12 @@
   "author_name": "",
   "author_email": "",
   "year": "{% now 'utc', '%Y' %}",
+  "site_fqdn": "",
+  "site_domain": "",
+  "use_dns": [
+    "yes",
+    "no"
+  ],
   "_extensions": [
     "jinja2_time.TimeExtension"
   ]

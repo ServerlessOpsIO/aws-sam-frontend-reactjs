@@ -10,9 +10,10 @@ pr: init dev
 ENV = ${USER}
 AWS_ACCOUNT = $$(aws sts get-caller-identity | jq -r .Account)
 STACKNAME = $$(basename ${CURDIR})-$(ENV)
-BUCKET = $$(basename ${CURDIR})-package-bucket-$(ENV)-$(AWS_ACCOUNT)
+DEPLOY_BUCKET = $$(basename ${CURDIR})-package-bucket-$(ENV)-$(AWS_ACCOUNT)
 PACKAGED_TEMPLATE = .aws-sam/packaged-template.yaml
-EVENT_SOURCE = {{cookiecutter.event_source}}
+DIST_DIR = "./dist"
+SITE_BUCKET = $$(aws cloudformation describe-stacks --stack-name hello-world-fe-tom | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "StaticSiteS3BucketName") | .OutputValue')
 
 check_profile:
 	# Make sure we have a user-scoped credentials profile set. We don't want to be accidentally using the default profile
@@ -21,7 +22,7 @@ check_profile:
 
 bucket:
 	# Create bucket if it does not exist
-	@aws --profile ${AWS_PROFILE} s3api head-bucket --bucket ${BUCKET} 2>/dev/null 1>/dev/null || aws --profile ${AWS_PROFILE} s3 mb s3://${BUCKET}
+	@aws --profile ${AWS_PROFILE} s3api head-bucket --bucket ${DEPLOY_BUCKET} 2>/dev/null 1>/dev/null || aws --profile ${AWS_PROFILE} s3 mb s3://${DEPLOY_BUCKET}
 
 
 build:
@@ -30,11 +31,19 @@ build:
 
 package: build
 	$(info Creating package)
-	sam package --profile ${AWS_PROFILE} --s3-bucket $(BUCKET) --output-template-file $(PACKAGED_TEMPLATE)
+	sam package --profile ${AWS_PROFILE} --s3-bucket $(DEPLOY_BUCKET) --output-template-file $(PACKAGED_TEMPLATE)
+
+dist:
+	@mkdir $(DIST_DIR) || true
+	# FIXME: We should bundle the app into here.
 
 deploy: bucket package
 	$(info Deploying to personal development stack)
-	sam deploy --parameter-overrides Environment=$(ENV) --profile ${AWS_PROFILE} --template-file $(PACKAGED_TEMPLATE) --stack-name $(STACKNAME) --capabilities CAPABILITY_IAM
+	@sam deploy --parameter-overrides Environment=$(ENV) --profile ${AWS_PROFILE} --template-file $(PACKAGED_TEMPLATE) --stack-name $(STACKNAME) --capabilities CAPABILITY_IAM
+
+sync: dist
+	$(info syncing S3 static content to S3 bucket)
+	@aws s3 sync ./dist s3://$(SITE_BUCKET)
 
 unit-test:
 	# run unit tests

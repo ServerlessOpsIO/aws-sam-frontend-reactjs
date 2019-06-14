@@ -10,15 +10,122 @@ Parameters:
     Type: String
     Description: "Name of deployment environment"
 
+  SiteIndexDoc:
+    Type: String
+    Description: "Index document name"
+    Default: "index.html"
+
+  SiteErrorDoc:
+    Type: String
+    Description: "Error document name"
+    Default: "error.html"
+
+  SiteFqdn:
+    Type: String
+    Description: "Site name (FQDN)"
+    Default: {{ cookiecutter.site_fqdn }}
+
+  SiteDomainName:
+    Type: String
+    Description: "Site domain"
+    Default: {{ cookiecutter.site_domain }}
+
+
+Mappings:
+  RegionMap:
+    us-east-1:
+      S3HostedZoneId: "Z3AQBSTGFYJSTF"
+      S3DomainName: "s3-website-us-east-1.amazonaws.com"
+    us-east-2:
+      S3HostedZoneId: "Z2O1EMRO9K5GLX"
+      S3DomainName: "s3-website-us-east-2.amazonaws.com"
+    us-west-1:
+      S3HostedZoneId: "Z2F56UZL2M1ACD"
+      S3DomainName: "s3-website-us-west-1.amazonaws.com"
+    us-west-2:
+      S3HostedZoneId: "Z3BJ6K6RIION7M"
+      S3DomainName: "s3-website-us-west-2.amazonaws.com"
+
 
 Resources:
+  ## Specifying the S3 Bucket
+  StaticSite:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      BucketName:
+        Ref: SiteFqdn
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
 
+  StaticSiteS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: StaticSite
+      PolicyDocument:
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action:
+              - s3:GetObject
+            Resource:
+              Fn::Join: [
+                "", [
+                  "arn:aws:s3:::",
+                  {
+                    "Ref": "StaticSite"
+                  },
+                  "/*"
+                ]
+              ]
+
+
+
+
+{% if cookiecutter.use_dns == "yes" %}
+  # FIXME: Do we need trailing '.' on site name?
+  DnsRecord:
+    Type: "AWS::Route53::RecordSet"
+    Properties:
+      HostedZoneName:
+        Fn::Sub: "${SiteDomainName}."
+      AliasTarget:
+        DNSName:
+          Fn::FindInMap:
+            - RegionMap
+            - Ref: AWS::Region
+            - S3DomainName
+        HostedZoneId:
+          Fn::FindInMap:
+            - RegionMap
+            - Ref: AWS::Region
+            - S3HostedZoneId
+      Name:
+        Ref: StaticSite
+      Type: 'A'
+{%- endif %}
 
 Outputs:
+{% if cookiecutter.use_dns == "yes" %}
   AppUrl:
     Description: "Application URL"
-    Value: <<VALUE>>
+    Value:
+      Fn::Sub: "http://${StaticSite}"
     Export:
       Name:
         Fn::Sub: "${AWS::StackName}-AppUrl"
+{%- endif %}
+
+  StaticSiteS3BucketName:
+    Value:
+      Ref: StaticSite
+
+  StaticSiteS3BucketWebsiteURL:
+    Value:
+      Fn::GetAtt:
+        - StaticSite
+        - WebsiteURL
 

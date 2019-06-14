@@ -1,0 +1,17 @@
+{
+  "service_name": "my-service-name",
+  "service_description": "Service Description",
+  "license": [
+    "other",
+    "BSD-2-Clause",
+    "MIT",
+    "MIT-0"
+  ],
+  "copyright_holder": "Singlestone Consulting",
+  "author_name": "",
+  "author_email": "",
+  "year": "{% now 'utc', '%Y' %}",
+  "_extensions": [
+    "jinja2_time.TimeExtension"
+  ]
+}

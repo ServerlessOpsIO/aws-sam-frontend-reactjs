@@ -45,12 +45,10 @@ sync: dist
 	@aws s3 sync ./dist s3://$(SITE_BUCKET)
 
 unit-test:
-	# run unit tests
-	true
+	npm run test
 
 e2e-test:
-	# run unit tests
-	true
+	npm run cypress
 
 test: unit-test e2e-test
 	# Run unit tests

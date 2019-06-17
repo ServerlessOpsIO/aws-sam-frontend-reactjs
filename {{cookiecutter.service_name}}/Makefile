@@ -34,8 +34,7 @@ package: build
 	sam package --profile ${AWS_PROFILE} --s3-bucket $(DEPLOY_BUCKET) --output-template-file $(PACKAGED_TEMPLATE)
 
 dist:
-	@mkdir $(DIST_DIR) || true
-	# FIXME: We should bundle the app into here.
+	npm run build
 
 deploy: bucket package
 	$(info Deploying to personal development stack)
@@ -49,11 +48,11 @@ unit-test:
 	# run unit tests
 	true
 
-int-test:
+e2e-test:
 	# run unit tests
 	true
 
-test: unit-test int-test
+test: unit-test e2e-test
 	# Run unit tests
 	true
 

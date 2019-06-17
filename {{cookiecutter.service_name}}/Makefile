@@ -42,7 +42,7 @@ deploy: bucket package
 
 sync: dist
 	$(info syncing S3 static content to S3 bucket)
-	@aws s3 sync ./build s3://$(SITE_BUCKET)
+	@aws s3 sync $(DIST_DIR) s3://$(SITE_BUCKET)
 
 unit-test:
 	npm run test

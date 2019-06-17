@@ -44,6 +44,25 @@ sync: dist
 	$(info syncing S3 static content to S3 bucket)
 	@aws s3 sync $(DIST_DIR) s3://$(SITE_BUCKET)
 
+describe:
+	$(info Describing stack)
+	@aws cloudformation describe-stacks --stack-name $(STACKNAME) --output table --query 'Stacks[0]'
+
+outputs:
+	$(info Displaying stack outputs)
+	@aws cloudformation describe-stacks --stack-name $(STACKNAME) --output table --query 'Stacks[0].Parameters'
+
+parameters:
+	$(info Displaying stack parameters)
+	@aws cloudformation describe-stacks --stack-name $(STACKNAME) --output table --query 'Stacks[0].Parameters'
+
+delete:
+	$(info Delete stack)
+	# NOTE: If SITE_BUCKET doesn't exist because of a stack failure then we
+	# just need to move on
+	@aws s3 rm --recursive s3://$(SITE_BUCKET) || true
+	@aws cloudformation delete-stack --stack-name $(STACKNAME)
+
 unit-test:
 	npm run test
 

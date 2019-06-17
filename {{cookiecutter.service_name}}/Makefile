@@ -48,7 +48,7 @@ unit-test:
 	npm run test
 
 e2e-test:
-	npm run cypress-headless
+	npm run test:e2e-headless
 
 test: unit-test e2e-test
 	# Run unit tests

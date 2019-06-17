@@ -1,6 +1,6 @@
 init:
+	$(info Initalizing project)
 	npm install
-	true
 
 # Command to run everytime you make changes to verify everything works
 dev: lint test
@@ -8,7 +8,7 @@ dev: lint test
 # Verifications to run before sending a pull request
 pr: init dev
 
-ENV = ${USER}
+ENV ?= ${USER}
 AWS_ACCOUNT = $$(aws sts get-caller-identity | jq -r .Account)
 STACKNAME = $$(basename ${CURDIR})-$(ENV)
 DEPLOY_BUCKET = $$(basename ${CURDIR})-package-bucket-$(ENV)-$(AWS_ACCOUNT)
@@ -26,15 +26,16 @@ bucket:
 
 build:
 	$(info Building application)
-	sam build
+	@sam build
 
 package: build
 	$(info Creating package)
-	sam package --profile ${AWS_PROFILE} --s3-bucket $(DEPLOY_BUCKET) --output-template-file $(PACKAGED_TEMPLATE)
+	@sam package --profile ${AWS_PROFILE} --s3-bucket $(DEPLOY_BUCKET) --output-template-file $(PACKAGED_TEMPLATE)
 
 dist:
-	npm install
-	npm run build
+	$(info Creating distribution contents)
+	@npm install
+	@npm run build
 
 deploy: bucket package
 	$(info Deploying to personal development stack)

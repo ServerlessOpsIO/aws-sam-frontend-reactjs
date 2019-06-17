@@ -30,6 +30,7 @@
 * [Python 3 installed](https://www.python.org/downloads/)
 * [Docker installed](https://www.docker.com/community-edition)
 * [SAM CLI installed](https://github.com/awslabs/aws-sam-cli)
+* [jq](https://stedolan.github.io/jq/download/)
 
 
 ## Packaging and deployment

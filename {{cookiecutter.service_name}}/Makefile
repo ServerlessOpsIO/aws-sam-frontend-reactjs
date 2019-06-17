@@ -1,4 +1,5 @@
 init:
+	npm install
 	true
 
 # Command to run everytime you make changes to verify everything works
@@ -12,18 +13,16 @@ AWS_ACCOUNT = $$(aws sts get-caller-identity | jq -r .Account)
 STACKNAME = $$(basename ${CURDIR})-$(ENV)
 DEPLOY_BUCKET = $$(basename ${CURDIR})-package-bucket-$(ENV)-$(AWS_ACCOUNT)
 PACKAGED_TEMPLATE = .aws-sam/packaged-template.yaml
-DIST_DIR = "./dist"
-SITE_BUCKET = $$(aws cloudformation describe-stacks --stack-name hello-world-fe-tom | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "StaticSiteS3BucketName") | .OutputValue')
+DIST_DIR = "./build"
+SITE_BUCKET = $$(aws cloudformation describe-stacks --stack-name $(STACKNAME) | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "StaticSiteS3BucketName") | .OutputValue')
 
 check_profile:
 	# Make sure we have a user-scoped credentials profile set. We don't want to be accidentally using the default profile
 	@aws configure --profile ${AWS_PROFILE} list 1>/dev/null 2>/dev/null || (echo '\nMissing AWS Credentials Profile called '${AWS_PROFILE}'. Run `aws configure --profile ${AWS_PROFILE}` to create a profile called '${AWS_PROFILE}' with creds to your personal AWS Account'; exit 1)
 
-
 bucket:
 	# Create bucket if it does not exist
 	@aws --profile ${AWS_PROFILE} s3api head-bucket --bucket ${DEPLOY_BUCKET} 2>/dev/null 1>/dev/null || aws --profile ${AWS_PROFILE} s3 mb s3://${DEPLOY_BUCKET}
-
 
 build:
 	$(info Building application)
@@ -34,6 +33,7 @@ package: build
 	sam package --profile ${AWS_PROFILE} --s3-bucket $(DEPLOY_BUCKET) --output-template-file $(PACKAGED_TEMPLATE)
 
 dist:
+	npm install
 	npm run build
 
 deploy: bucket package
@@ -42,15 +42,13 @@ deploy: bucket package
 
 sync: dist
 	$(info syncing S3 static content to S3 bucket)
-	@aws s3 sync ./dist s3://$(SITE_BUCKET)
+	@aws s3 sync $(DIST_DIR) s3://$(SITE_BUCKET)
 
 unit-test:
-	# run unit tests
-	true
+	npm run test
 
 e2e-test:
-	# run unit tests
-	true
+	npm run test:e2e-headless
 
 test: unit-test e2e-test
 	# Run unit tests

@@ -3,6 +3,11 @@ AWS SAM [Cookiecutter](https://github.com/audreyr/cookiecutter) template for cre
 
 This template can be used by SAM CLI to generate a new project skeleton. During the process of creating a new project you will be asked to select options for how your project should be configured. A description of these options is found in the **Options** section of this README. This template does its best to handle as much boilerplate work as possible and guide people towards using best practices.
 
+## CloudFront v. Bare S3 Hosting
+This template supports two types of website hosting. Both types of hosting serve content out of an AWS S3 bucket. The default in this template is to create a CloudFront distribution to front the S3 bucket. The CloudFront setup provides HTTPS without certificate validation errors as well as configurable site object caching. Initial deployment and updates to the distribution can be however be time consuming.
+
+Only disable CloudFront for testing this template or low-trafficked / low-value sites.
+
 ## Usage
 ### 1. Install AWS SAM CLI
 Installing and using the AWS SAM CLI requires having Python installed. Once installed use `pip` to install AWS SAM CLI.
@@ -37,7 +42,6 @@ $ sam init --location gh:singlestone/aws-sam-tmpl-frontend-reactjs
 
 ## Options
 
-
 Option | Description
 ------------------------------------------------- | ---------------------------------------------------------------------------------
 `service_name`              |   Name of service
@@ -48,4 +52,8 @@ Option | Description
 `author_name`               |   Author name
 `author_email`              |   Author email
 `year`                      |   Year (for copyright)
+`site_fqdn`                 |   Fully qualified domain name of site. _ex. app.example.com_
+`site_domain`               |   Parent domain of website (This should be the name of a Route53 zone if it exists) _ex. example.com_
+`use_dns`                   |   Whether or not to manage AWS Route53 DNS.
+`use_cloudfront`            |   Whether or not to front the site using AWS CloudFront
 

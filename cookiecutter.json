@@ -13,6 +13,10 @@
   "year": "{% now 'utc', '%Y' %}",
   "site_fqdn": "",
   "site_domain": "",
+  "use_cloudfront": [
+    "yes",
+    "no"
+  ],
   "use_dns": [
     "yes",
     "no"

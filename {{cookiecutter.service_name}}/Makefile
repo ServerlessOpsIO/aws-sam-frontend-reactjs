@@ -37,13 +37,15 @@ dist:
 	@npm install
 	@npm run build
 
-deploy: bucket package
+deploy-stack:
 	$(info Deploying to personal development stack)
-	@sam deploy --parameter-overrides Environment=$(ENV) --profile ${AWS_PROFILE} --template-file $(PACKAGED_TEMPLATE) --stack-name $(STACKNAME) --capabilities CAPABILITY_IAM
+	@sam deploy --parameter-overrides Environment=$(ENV) --profile ${AWS_PROFILE} --template-file $(PACKAGED_TEMPLATE) --stack-name $(STACKNAME) --capabilities CAPABILITY_IAM --no-fail-on-empty-changeset
 
-sync: dist
+sync:
 	$(info syncing S3 static content to S3 bucket)
 	@aws s3 sync $(DIST_DIR) s3://$(SITE_BUCKET)
+
+deploy: bucket package deploy-stack dist sync
 
 describe:
 	$(info Describing stack)

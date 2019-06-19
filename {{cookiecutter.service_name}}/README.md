@@ -66,7 +66,6 @@ Deploying this application is a two-step process. The first command below deploy
 
 ```bash
 make deploy
-make sync
 ```
 
 #### Deploying to alternate environments
@@ -74,7 +73,6 @@ By default this stack sets the name of the deployment environment to your local 
 
 ```bash
 ENV=my-environment make deploy
-ENV=my-environment make sync
 ```
 
 _NOTE: This will not deploy your stack across account boundaries. If you are currently using your development environment account credentials and you name the environment `prod`, you will just create an environment in the development account named `prod`._

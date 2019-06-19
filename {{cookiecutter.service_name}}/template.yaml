@@ -64,18 +64,7 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: PublicRead
-{%- if cookiecutter.use_cloudfront == "yes" %}
-      BucketName:
-        Fn::Join:
-          - "-"
-          - - Fn::Join:
-                - "-"
-                - Fn::Split:
-                    - "."
-                    - Ref: SiteFqdn
-            - Ref: AWS::Region
-            - Ref: AWS::AccountId
-{%- else %}
+{%- if cookiecutter.use_cloudfront == "no" %}
       BucketName:
         Ref: SiteFqdn
 {%- endif %}

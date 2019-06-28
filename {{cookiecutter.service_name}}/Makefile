@@ -16,6 +16,8 @@ PACKAGED_TEMPLATE = .aws-sam/packaged-template.yaml
 DIST_DIR = "./build"
 SITE_BUCKET = $$(aws cloudformation describe-stacks --stack-name $(STACKNAME) | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "StaticSiteS3BucketName") | .OutputValue')
 
+.PHONY: build package clean
+
 check_profile:
 	# Make sure we have a user-scoped credentials profile set. We don't want to be accidentally using the default profile
 	@aws configure --profile ${AWS_PROFILE} list 1>/dev/null 2>/dev/null || (echo '\nMissing AWS Credentials Profile called '${AWS_PROFILE}'. Run `aws configure --profile ${AWS_PROFILE}` to create a profile called '${AWS_PROFILE}' with creds to your personal AWS Account'; exit 1)
@@ -28,7 +30,7 @@ build:
 	$(info Building application)
 	@sam build
 
-package: build
+package: build bucket
 	$(info Creating package)
 	@sam package --profile ${AWS_PROFILE} --s3-bucket $(DEPLOY_BUCKET) --output-template-file $(PACKAGED_TEMPLATE)
 
@@ -45,7 +47,7 @@ sync:
 	$(info syncing S3 static content to S3 bucket)
 	@aws s3 sync $(DIST_DIR) s3://$(SITE_BUCKET)
 
-deploy: bucket package deploy-stack dist sync
+deploy: package deploy-stack dist sync
 
 describe:
 	$(info Describing stack)
@@ -84,4 +86,6 @@ lint:
 	# Lint code
 	true
 
+clean:
+	rm -rf .aws-sam
 

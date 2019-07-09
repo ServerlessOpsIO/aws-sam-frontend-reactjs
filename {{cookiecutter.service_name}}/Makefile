@@ -8,23 +8,20 @@ dev: lint test
 # Verifications to run before sending a pull request
 pr: init dev
 
-ENV ?= ${USER}
-AWS_ACCOUNT = $$(aws sts get-caller-identity | jq -r .Account)
-STACKNAME = $$(basename ${CURDIR})-$(ENV)
-DEPLOY_BUCKET = $$(basename ${CURDIR})-package-bucket-$(ENV)-$(AWS_ACCOUNT)
+export ENV ?= ${USER}
+export SERVICE ?= $(shell basename ${CURDIR})
+export STACKNAME = $(SERVICE)-$(ENV)
+
+AWS_ACCOUNT ?= $(shell aws sts get-caller-identity | jq -r .Account)
+BUCKET ?= $(shell basename ${CURDIR})-package-bucket-$(ENV)-$(AWS_ACCOUNT)
 PACKAGED_TEMPLATE = .aws-sam/packaged-template.yaml
-DIST_DIR = "./build"
-SITE_BUCKET = $$(aws cloudformation describe-stacks --stack-name $(STACKNAME) | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "StaticSiteS3BucketName") | .OutputValue')
+EVENT_SOURCE = {{cookiecutter.event_source}}
 
 .PHONY: build package clean
 
-check_profile:
-	# Make sure we have a user-scoped credentials profile set. We don't want to be accidentally using the default profile
-	@aws configure --profile ${AWS_PROFILE} list 1>/dev/null 2>/dev/null || (echo '\nMissing AWS Credentials Profile called '${AWS_PROFILE}'. Run `aws configure --profile ${AWS_PROFILE}` to create a profile called '${AWS_PROFILE}' with creds to your personal AWS Account'; exit 1)
-
 bucket:
 	# Create bucket if it does not exist
-	@aws --profile ${AWS_PROFILE} s3api head-bucket --bucket ${DEPLOY_BUCKET} 2>/dev/null 1>/dev/null || aws --profile ${AWS_PROFILE} s3 mb s3://${DEPLOY_BUCKET}
+	@aws s3api head-bucket --bucket ${DEPLOY_BUCKET} 2>/dev/null 1>/dev/null || aws s3 mb s3://${DEPLOY_BUCKET}
 
 build:
 	$(info Building application)
@@ -32,7 +29,7 @@ build:
 
 package: build bucket
 	$(info Creating package)
-	@sam package --profile ${AWS_PROFILE} --s3-bucket $(DEPLOY_BUCKET) --output-template-file $(PACKAGED_TEMPLATE)
+	@sam package --s3-bucket $(DEPLOY_BUCKET) --output-template-file $(PACKAGED_TEMPLATE)
 
 dist:
 	$(info Creating distribution contents)
@@ -41,7 +38,7 @@ dist:
 
 deploy-stack:
 	$(info Deploying to personal development stack)
-	@sam deploy --parameter-overrides Environment=$(ENV) --profile ${AWS_PROFILE} --template-file $(PACKAGED_TEMPLATE) --stack-name $(STACKNAME) --capabilities CAPABILITY_IAM --no-fail-on-empty-changeset
+	@sam deploy --parameter-overrides Environment=$(ENV) --template-file $(PACKAGED_TEMPLATE) --stack-name $(STACKNAME) --capabilities CAPABILITY_IAM --no-fail-on-empty-changeset
 
 sync:
 	$(info syncing S3 static content to S3 bucket)

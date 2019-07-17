@@ -15,6 +15,8 @@ export STACKNAME = $(SERVICE)-$(ENV)
 AWS_ACCOUNT ?= $(shell aws sts get-caller-identity | jq -r .Account)
 BUCKET ?= $(shell basename ${CURDIR})-pkg-$(ENV)-$(AWS_ACCOUNT)
 PACKAGED_TEMPLATE = .aws-sam/packaged-template.yaml
+DIST_DIR = "./build"
+SITE_BUCKET = $(shell aws cloudformation describe-stacks --stack-name $(STACKNAME) | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "StaticSiteS3BucketName") | .OutputValue')
 
 CICD_STACKNAME = cicd-$(SERVICE)-$(ENV)
 CICD_TEMPLATE = pipeline.yaml

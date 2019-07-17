@@ -15,7 +15,6 @@ export STACKNAME = $(SERVICE)-$(ENV)
 AWS_ACCOUNT ?= $(shell aws sts get-caller-identity | jq -r .Account)
 BUCKET ?= $(shell basename ${CURDIR})-pkg-$(ENV)-$(AWS_ACCOUNT)
 PACKAGED_TEMPLATE = .aws-sam/packaged-template.yaml
-EVENT_SOURCE = {{cookiecutter.event_source}}
 
 CICD_STACKNAME = cicd-$(SERVICE)-$(ENV)
 CICD_TEMPLATE = pipeline.yaml

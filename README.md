@@ -57,3 +57,5 @@ Option | Description
 `use_dns`                   |   Whether or not to manage AWS Route53 DNS.
 `use_cloudfront`            |   Whether or not to front the site using AWS CloudFront
 
+## Credits
+Initially developed for [SingleStone Consulting](https://www.singlestoneconsulting.com/) for a serverless application project.
